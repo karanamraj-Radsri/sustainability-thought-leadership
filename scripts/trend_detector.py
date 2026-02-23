@@ -1,45 +1,46 @@
 import requests
 import json
 
-# Constants
-API_KEY = 'your_newsapi_key'  # Replace with your API key for NewsAPI
-TOPICS = ["Climate Change", "Sustainable Agriculture", "Renewable Energy", "Waste Management"]
-GPT_MODEL = 'gpt-4o-mini'  # Hypothetical model name, replace with actual model usage
+# Define topics
+TOPICS = ["Circular Economy", "Carbon Management", "CSRD/CSDDD Compliance", "Sustainable Materials"]
 
-def fetch_articles(topic):
-    url = f'https://newsapi.org/v2/everything?q={topic}&pageSize=10&apiKey={API_KEY}'
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json().get('articles', [])
-    else:
-        print(f"Error fetching articles for topic {topic}: {response.status_code}")
-        return []
+# Fetch articles from NewsAPI
+def fetch_articles(api_key, topics, num_articles=10):
+    articles = []
+    for topic in topics:
+        response = requests.get(f'https://newsapi.org/v2/everything?q={topic}&from=2026-02-16&sortBy=publishedAt&apiKey={api_key}&pageSize={num_articles}')
+        if response.status_code == 200:
+            data = response.json()
+            articles.extend(data['articles'])
+    return articles
 
-def summarize_trends(articles):
-    # Mockup function for GPT-4o-mini trend analysis
-    # Implement actual call to GPT model here
-    return [
-        f"Trend {i + 1}: Summary of trend based on {len(articles)} articles."
-        for i in range(5)
-    ]
+# Identify trends using GPT-4o-mini (placeholder implementation)
+def identify_trends(articles):
+    trends = []
+    for article in articles:
+        # Placeholder for actual GPT-4o-mini interaction
+t        summary = f"Key takeaways for {article['title']}"  # Replace with actual GPT-4o-mini integration
+        relevance = "High"  # Replace with actual relevance scoring
+        trends.append({"title": article['title'], "summary": summary, "relevance": relevance})
+    return trends
 
-def write_output(topic, summaries):
-    # Write to JSON file
-    with open(f'{topic.replace(" ", "_").lower()}_summary.json', 'w') as json_file:
-        json.dump(summaries, json_file)
+# Output data in Markdown and JSON formats
+def output_results(trends, output_dir):
+    # Markdown output
+    with open(f'{output_dir}/RAW_DATA.md', 'w') as md_file:
+        for trend in trends:
+            md_file.write(f"## {trend['title']}\n")
+            md_file.write(f"### Summary: {trend['summary']}\n")
+            md_file.write(f"### Relevance: {trend['relevance']}\n\n")
 
-    # Write to Markdown file
-    with open(f'{topic.replace(" ", "_").lower()}_summary.md', 'w') as md_file:
-        md_file.write(f"# {topic} Trends\n\n")
-        for summary in summaries:
-            md_file.write(f"- {summary}\n")
+    # JSON output
+    with open(f'{output_dir}/trends.json', 'w') as json_file:
+        json.dump(trends, json_file, indent=4)
 
-def main():
-    for topic in TOPICS:
-        articles = fetch_articles(topic)
-        if articles:
-            summaries = summarize_trends(articles)
-            write_output(topic, summaries)
-
-if __name__ == "__main__":
-    main()
+# Main function
+if __name__ == '__main__':
+    API_KEY = 'your_newsapi_key_here'  # Replace with your NewsAPI key
+    OUTPUT_DIR = 'path_to_output_directory'  # Set your output directory
+    articles = fetch_articles(API_KEY, TOPICS)
+    trends = identify_trends(articles)
+    output_results(trends, OUTPUT_DIR)
